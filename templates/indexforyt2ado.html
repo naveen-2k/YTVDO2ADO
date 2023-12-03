@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YTVDO2ADO by Naveen</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Arial', sans-serif;
+            background-color: #f0f0f0;
+        }
+        
+        .container {
+            max-width: 600px;
+            margin: 50px auto;
+            text-align: center;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        h1 {
+            color: #333;
+        }
+        
+        form {
+            margin-top: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 10px;
+            color: #333;
+        }
+        
+        input {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 20px;
+        }
+        
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            font-weight: bold;
+            background-color: #4CAF50;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: #45a049;
+        }
+        
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>YTVDO2ADO by Naveen</h1>
+        <form id="youtubeForm">
+            <label for="youtubeLink">YouTube Video Link:</label>
+            <input type="text" id="youtubeLink" name="youtubeLink" placeholder="Enter YouTube Video Link" required>
+            <button type="button" onclick="submitForm()"> Submit </button>
+        </form>
+        <div id="responseMessage" style="margin-top: 20px;"></div>
+        <button type="button" onclick="dwnado()" id="dwnbtn">wait</button>
+    </button>
+
+    <script>
+        var title=" ";
+        function submitForm() {
+            // Get the YouTube video link from the input field
+            const youtubeLink = document.getElementById('youtubeLink').value;
+            const dwnbtn=document.getElementById('dwnbtn');
+
+            // Use fetch to send the link to the backend for processing
+            fetch('/process_link', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: new URLSearchParams({
+                    'youtubeLink': youtubeLink,
+                }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log(data);
+
+                // Display success message on the frontend
+                const responseMessage = document.getElementById('responseMessage');
+                if (data.success) {
+                    responseMessage.innerHTML = '<p style="color: green;">Audio downloaded successfully!</p>';
+                    dwnbtn.innerText = "Save File";
+                    title=data.message;
+
+                } else {
+                    responseMessage.innerHTML = '<p style="color: red;">Error: ' + data.message + '</p>';
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+
+                // Display error message on the frontend
+                const responseMessage = document.getElementById('responseMessage');
+                responseMessage.innerHTML = '<p style="color: red;">Error: ' + error.message + '</p>';
+            });
+
+        }
+            function dwnado() {
+               const youtubeLink = document.getElementById('youtubeLink').value;
+
+        fetch('/download_link', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: new URLSearchParams({
+                'youtubeLink': youtubeLink,
+            }),
+        })
+        .then(response => {
+            if (response.ok) {
+                return response.blob(); // Get the file content as a Blob
+            } else {
+                throw new Error('Error processing link');
+            }
+        })
+        .then(blob => {
+            // Create a link element and trigger the download
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = title+'_audio.mp4'; // Set the desired filename
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            const responseMessage = document.getElementById('responseMessage');
+            responseMessage.innerHTML = '<p style="color: red;">Error: ' + error.message + '</p>';
+        });
+        }
+    </script>
+</body>
+
+</html>
